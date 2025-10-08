@@ -1,2 +1,2 @@
 # Dinosaur-CRUD-App
-CRUD app that utilizes constructed dinosaur park database as a personal project.
+A personal project that utilizes a database to deliver a prehistoric zoo webpage.
