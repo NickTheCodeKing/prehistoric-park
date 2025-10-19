@@ -203,6 +203,10 @@ def create_animal(animal: Animal):
     with Session(engine) as session:
         if animal.id == None:
             animal.id = generate_new_id()
+        else:
+            existing_animal = session.exec(select(Animal).where(Animal.id == animal.id)).first()
+            if existing_animal:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"An animal with ID: {animal.id} already exists.")
         session.add(animal)
         session.commit()
         animal = session.exec(select(Animal).where(Animal.id == animal.id)).first()
