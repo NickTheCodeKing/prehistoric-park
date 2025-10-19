@@ -3,7 +3,8 @@ from fastapi import FastAPI, status, HTTPException, Response
 from typing import Union
 from pydantic import BaseModel
 from dotenv import load_dotenv
-from sqlmodel import create_engine, Field, Session, SQLModel, select
+from sqlalchemy import func
+from sqlmodel import create_engine, Field, Session, SQLModel, select, func
 from datetime import datetime, date
 from enum import Enum
 import os
@@ -200,6 +201,8 @@ def select_animal(id: str):
     
 def create_animal(animal: Animal):
     with Session(engine) as session:
+        if animal.id == None:
+            animal.id = generate_new_id()
         session.add(animal)
         session.commit()
         animal = session.exec(select(Animal).where(Animal.id == animal.id)).first()
@@ -291,6 +294,17 @@ def remove_animal(animal: Animal):
         session.commit()
 
         return session.exec(select(Animal).where(Animal.id == animal.id)).first()
+    
+def generate_new_id():
+    with Session(engine) as session:
+        result = session.exec(func.max(Animal.id)).first()
+        max_id_str = result[0]
+        max_id_int = int(max_id_str)
+        id_int = max_id_int + 1
+        id_int_str = str(id_int)
+        id_int_str = id_int_str.zfill(10)
+        print("ID: ", id_int_str)
+        return id_int_str
     
 
     
