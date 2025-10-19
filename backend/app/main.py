@@ -1,10 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, status
 
 from typing import Union
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from sqlmodel import create_engine, Field, Session, SQLModel, select
-from datetime import datetime
+from datetime import datetime, date
 from enum import Enum
 import os
 
@@ -39,7 +39,7 @@ class Animal(SQLModel, table=True):
     height: float | None = None
     length: float | None = None
     weight: float | None = None
-    birthDate: datetime
+    birthDate: date
     description: str | None = None
     temperament: str | None = None
     cautionLevel: CautionLevel
@@ -47,7 +47,7 @@ class Animal(SQLModel, table=True):
     dnaSequence: str | None = None
     deceased: bool | None = None
 
-@app.get("/animals")
+@app.get("/animals", status_code=status.HTTP_200_OK)
 def get_animals(
     id: str | None = None, 
     enclosureID: str | None = None, 
@@ -58,7 +58,7 @@ def get_animals(
     height: float | None = None, 
     length: float | None = None, 
     weight: float | None = None, 
-    birthDate: datetime | None = None, 
+    birthDate: date | None = None, 
     description: str | None = None,
     temperament: str | None = None,
     cautionLevel: CautionLevel | None = None,
@@ -69,18 +69,18 @@ def get_animals(
     return select_animals(id, enclosureID, animalName, age, sex, species, height, length, weight, birthDate, description, temperament, cautionLevel, lastFeedDate, dnaSequence, deceased)
         
     
-@app.get("/animals/{id}")
+@app.get("/animals/{id}", status_code=status.HTTP_200_OK)
 def get_animal(id: str):
     return select_animal(id)
 
-@app.post("/animals")
+@app.post("/animals", status_code=status.HTTP_201_CREATED)
 def post_animal(animal: Animal):
     animal = create_animal(animal)
 
     return animal
     
 
-@app.patch("/animals/{id}")
+@app.patch("/animals/{id}", status_code=status.HTTP_200_OK)
 def patch_animal(id: str | None = None, 
     enclosureID: str | None = None, 
     animalName: str | None = None, 
@@ -90,7 +90,7 @@ def patch_animal(id: str | None = None,
     height: float | None = None, 
     length: float | None = None, 
     weight: float | None = None, 
-    birthDate: datetime | None = None, 
+    birthDate: date | None = None, 
     description: str | None = None,
     temperament: str | None = None,
     cautionLevel: CautionLevel | None = None,
@@ -101,7 +101,7 @@ def patch_animal(id: str | None = None,
     animal = select_animal(id)
     return update_animal(animal, enclosureID, animalName, age, sex, species, height, length, weight, birthDate, description, temperament, cautionLevel, lastFeedDate, dnaSequence, deceased)  
         
-@app.put("/animals/{id}")
+@app.put("/animals/{id}", status_code=status.HTTP_200_OK)
 def put_animal(id: str, new_animal: Animal):
     old_animal = select_animal(id)
 
@@ -120,7 +120,7 @@ def select_animals(
     height: float | None = None, 
     length: float | None = None, 
     weight: float | None = None, 
-    birthDate: datetime | None = None, 
+    birthDate: date | None = None, 
     description: str | None = None,
     temperament: str | None = None,
     cautionLevel: CautionLevel | None = None,
@@ -186,7 +186,7 @@ def update_animal(animal: Animal,
     height: float | None = None, 
     length: float | None = None, 
     weight: float | None = None, 
-    birthDate: datetime | None = None, 
+    birthDate: date | None = None, 
     description: str | None = None,
     temperament: str | None = None,
     cautionLevel: CautionLevel | None = None,
