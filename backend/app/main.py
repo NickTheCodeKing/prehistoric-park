@@ -113,8 +113,8 @@ def patch_animal(id: str | None = None,
     if not animal:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found")
 
-    return update_animal(animal, enclosureID, animalName, age, sex, species, height, length, weight, birthDate, description, temperament, cautionLevel, lastFeedDate, dnaSequence, deceased)  
-        
+    return update_animal(animal, enclosureID, animalName, age, sex, species, height, length, weight, birthDate, description, temperament, cautionLevel, lastFeedDate, dnaSequence, deceased)
+    
 @app.put("/animals/{id}", status_code=status.HTTP_200_OK)
 def put_animal(id: str, new_animal: Animal):
     old_animal = select_animal(id)
@@ -125,6 +125,17 @@ def put_animal(id: str, new_animal: Animal):
     animal = replace_animal(new_animal, old_animal)
 
     return animal
+
+@app.delete("/animals/{id}", status_code=status.HTTP_200_OK)
+def delete_animal(id: str):
+    animal = select_animal(id)
+
+    if not animal:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found")
+    else:
+        remove_animal(animal)
+
+    return
     
 
 def select_animals(
@@ -185,7 +196,7 @@ def select_animals(
     
 def select_animal(id: str):
     with Session(engine) as session:
-        return session.exec(select(Animal).where(Animal.id == id))
+        return session.exec(select(Animal).where(Animal.id == id)).first()
     
 def create_animal(animal: Animal):
     with Session(engine) as session:
@@ -273,6 +284,12 @@ def replace_animal(new_animal: Animal, old_animal: Animal):
 
         return old_animal
 
+def remove_animal(animal: Animal):
+    with Session(engine) as session:
+        session.delete(animal)
+        session.commit()
+
+        return session.exec(select(Animal).where(Animal.id == animal.id)).first()
     
 
     
