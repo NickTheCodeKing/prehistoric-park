@@ -133,9 +133,9 @@ def delete_animal(id: str):
     if not animal:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found")
     else:
-        remove_animal(animal)
+        animal = remove_animal(animal)
 
-    return
+    return animal
     
 
 def select_animals(
@@ -202,6 +202,7 @@ def create_animal(animal: Animal):
     with Session(engine) as session:
         session.add(animal)
         session.commit()
+        animal = session.exec(select(Animal).where(Animal.id == animal.id)).first()
 
         return animal
     
