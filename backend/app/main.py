@@ -1,4 +1,4 @@
-from fastapi import FastAPI, status
+from fastapi import FastAPI, status, HTTPException, Response
 
 from typing import Union
 from pydantic import BaseModel
@@ -49,6 +49,7 @@ class Animal(SQLModel, table=True):
 
 @app.get("/animals", status_code=status.HTTP_200_OK)
 def get_animals(
+    response: Response,
     id: str | None = None, 
     enclosureID: str | None = None, 
     animalName: str | None = None, 
@@ -66,11 +67,20 @@ def get_animals(
     dnaSequence: str | None = None,
     deceased: bool | None = None
     ):
-    return select_animals(id, enclosureID, animalName, age, sex, species, height, length, weight, birthDate, description, temperament, cautionLevel, lastFeedDate, dnaSequence, deceased)
+
+    animals = select_animals(id, enclosureID, animalName, age, sex, species, height, length, weight, birthDate, description, temperament, cautionLevel, lastFeedDate, dnaSequence, deceased)
+    if not animals:
+        response.status_code = status.HTTP_204_NO_CONTENT
+    return animals
         
     
 @app.get("/animals/{id}", status_code=status.HTTP_200_OK)
 def get_animal(id: str):
+
+    animal = select_animal(id)
+
+    if not animal:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found")
     return select_animal(id)
 
 @app.post("/animals", status_code=status.HTTP_201_CREATED)
@@ -99,11 +109,18 @@ def patch_animal(id: str | None = None,
     deceased: bool | None = None
     ):
     animal = select_animal(id)
+
+    if not animal:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found")
+
     return update_animal(animal, enclosureID, animalName, age, sex, species, height, length, weight, birthDate, description, temperament, cautionLevel, lastFeedDate, dnaSequence, deceased)  
         
 @app.put("/animals/{id}", status_code=status.HTTP_200_OK)
 def put_animal(id: str, new_animal: Animal):
     old_animal = select_animal(id)
+
+    if not animal:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found")
 
     animal = replace_animal(new_animal, old_animal)
 
@@ -168,7 +185,7 @@ def select_animals(
     
 def select_animal(id: str):
     with Session(engine) as session:
-        return session.exec(select(Animal).where(Animal.id == id)).one()
+        return session.exec(select(Animal).where(Animal.id == id))
     
 def create_animal(animal: Animal):
     with Session(engine) as session:
