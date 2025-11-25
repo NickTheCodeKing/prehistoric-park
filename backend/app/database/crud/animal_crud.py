@@ -5,7 +5,7 @@ from ...models.enums import Sex, CautionLevel
 from datetime import datetime, date
 
 def select_animals(
-    session: db.Session | None = None,
+    session: db.Session,
     id: str | None = None, 
     enclosureID: str | None = None, 
     animalName: str | None = None, 
@@ -23,8 +23,6 @@ def select_animals(
     dnaSequence: str | None = None,
     deceased: bool | None = None
     ):
-    if session is None:
-        session = db.get_session()
     statement = select(Animal)
     if id:
         statement = statement.where(Animal.id == id)
@@ -62,15 +60,10 @@ def select_animals(
             
     return session.exec(statement).all()
 
-def select_animal(*, session: db.Session | None = None, id: str):
-    if not session:
-        session = db.get_session()
+def select_animal(*, session: db.Session, id: str):
     return session.exec(select(Animal).where(Animal.id == id)).first()
 
-def create_animal(*, session: db.Session | None = None, animal: Animal):
-    if not session:
-        session = db.get_session()
-
+def create_animal(*, session: db.Session, animal: Animal):
     session.add(animal)
     session.commit()
     animal = session.exec(select(Animal).where(Animal.id == animal.id)).first()
@@ -79,7 +72,7 @@ def create_animal(*, session: db.Session | None = None, animal: Animal):
 
 def update_animal(
     *,
-    session: db.Session | None = None,
+    session: db.Session,
     animal: Animal,
     enclosureID: str | None = None, 
     animalName: str | None = None, 
@@ -97,8 +90,6 @@ def update_animal(
     dnaSequence: str | None = None,
     deceased: bool | None = None
     ):
-    if not session:
-        session = db.get_session()
     if enclosureID:
         animal.enclosureID = enclosureID
     if animalName:
@@ -137,8 +128,6 @@ def update_animal(
     return animal
 
 def replace_animal(*, session: db.Session | None = None, new_animal: Animal, old_animal: Animal):
-    if not session:
-        session = db.get_session()
     old_animal.enclosureID = new_animal.enclosureID
     old_animal.animalName = new_animal.animalName
     old_animal.age = new_animal.age
@@ -162,16 +151,12 @@ def replace_animal(*, session: db.Session | None = None, new_animal: Animal, old
     return old_animal
 
 def remove_animal(*, session: db.Session | None = None, animal: Animal):
-    if not session:
-        session = db.get_session()
     session.delete(animal)
     session.commit()
 
     return session.exec(select(Animal).where(Animal.id == animal.id)).first()
 
 def generate_new_id(session: db.Session | None = None):
-    if not session:
-        session = db.get_session()
     result = session.exec(func.max(Animal.id)).first()
     max_id_str = result[0]
     max_id_int = int(max_id_str)
