@@ -64,6 +64,7 @@ def select_animal(*, session: db.Session, id: str):
     return session.exec(select(Animal).where(Animal.id == id)).first()
 
 def create_animal(*, session: db.Session, animal: Animal):
+    animal = ensure_dates(animal)
     session.add(animal)
     session.commit()
     animal = session.exec(select(Animal).where(Animal.id == animal.id)).first()
@@ -120,6 +121,8 @@ def update_animal(
         animal.dnaSequence = dnaSequence
     if deceased:
         animal.deceased = deceased
+
+    animal = ensure_dates(animal)
     
     session.add(animal)
     session.commit()
@@ -128,6 +131,8 @@ def update_animal(
     return animal
 
 def replace_animal(*, session: db.Session | None = None, new_animal: Animal, old_animal: Animal):
+    new_animal = ensure_dates(new_animal)
+
     old_animal.enclosureID = new_animal.enclosureID
     old_animal.animalName = new_animal.animalName
     old_animal.age = new_animal.age
@@ -164,3 +169,13 @@ def generate_new_id(session: db.Session | None = None):
     id_int_str = str(id_int)
     id_int_str = id_int_str.zfill(10)
     return id_int_str
+
+def ensure_dates(animal):
+    if hasattr(animal, "birthDate") and isinstance(animal.birthDate, str):
+        animal.birthDate = datetime.strptime(animal.birthDate, "%Y-%m-%d").date()
+    if hasattr(animal, "lastFeedDate") and animal.lastFeedDate and isinstance(animal.lastFeedDate, str):
+        try:
+            animal.lastFeedDate = datetime.fromisoformat(animal.lastFeedDate)
+        except ValueError:
+            animal.lastFeedDate = datetime.strptime(animal.lastFeedDate, "%Y-%m-%d")
+    return animal
